@@ -5,6 +5,8 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import DeclarativeBase
 from base.models_and_engine import Channel, Video
+from utils.logs import my_logger
+
 
 class Keys(Enum):
     VIEWS = "views"
@@ -32,6 +34,7 @@ class HandlerDB:
             except IntegrityError as er:
                 return False, str(er.orig) + "(Для не программистов, пока не удалите все видео, канал удалить нельзя)"
             except Exception as er:
+                my_logger.error(f"unexpected error{er}")
                 return False, f"Unexpected error {er}"
 
         return False, 'not found'
@@ -45,6 +48,7 @@ class HandlerDB:
         except IntegrityError as er:
             result = False, f"Integrity Data Error : {er.orig}"
         except Exception as er:
+            my_logger.error(f"unexpected error{er}")
             result = False, f'Unexpected  Error: {str(er)}'
         finally:
             return result
@@ -62,6 +66,7 @@ class HandlerDB:
         except IntegrityError as er:
             return None, f'Cannot to update data in {self.model.__name__} : {er.orig}'
         except Exception as er:
+            my_logger.error(f"unexpected error{er}")
             return None, f'Unexpected Error {er}'
 
     async def get_all(self, key: Keys, value: Any = None) -> Sequence[Row | RowMapping | None]:
@@ -74,14 +79,11 @@ class HandlerDB:
         :return: A sequence of rows or None.
         """
         key_value:str = key.value
-
         if value:
             stmt = select(self.model).where(getattr(self.model, key_value) == value).order_by(getattr(self.model, key_value))
             channels = await self._session.execute(stmt)
         else:
-            print("print!!!!!!!!!", self.model,key_value)
             stmt = select(self.model).order_by(getattr(self.model, key_value))
-            print(stmt)
             channels = await self._session.execute(stmt)
         result = channels.scalars().all()
         return result
