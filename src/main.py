@@ -9,7 +9,7 @@ from utils.logs import my_logger
 import uvicorn
 
 app = FastAPI(
-    title="Multi Do Prodaction",
+    title="Multi Do Production",
 
     summary="Testing task. CRUD system emulator",
     version="0.0.1",
